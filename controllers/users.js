@@ -1,5 +1,5 @@
-const bcrypt = require('bcrypt');
 const userRouter = require('express').Router();
+const userService = require('../services/userService');
 const User = require('../models/User');
 
 userRouter.post('/', async (request, response) => {
@@ -13,18 +13,10 @@ userRouter.post('/', async (request, response) => {
     } else if (!body.username || body.username.length < 3) {
         return response.status(400).send({
             error: 'Username must be at least 3 characters long.'
-        });
+        }); 
     }
 
-    const saltrounds = 10;
-    const passwordHash = await bcrypt.hash(body.password, saltrounds);
-
-    const user = new User({
-        username: body.username,
-        passwordHash
-    })
-
-    const savedUser = await user.save();
+    const savedUser = await userService.create(body);
 
     response.json(savedUser);
 })
