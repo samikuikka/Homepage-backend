@@ -33,14 +33,13 @@ describe('project', () => {
 
     it('let user show projects with valid token', async () => {
         
-        const response = await api
+        await api
             .get('/api/projects')
             .set('Authorization', `bearer ${token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         
-        console.log(response.body);
-    }, 9999)
+    })
 
     it('normal project can be added', async () => {
 
@@ -114,6 +113,26 @@ describe('project', () => {
 
             expect(response2.body).toHaveLength(4)
             expect(response2.body.map(object => object.name)).toContain('Test project');
+        })
+
+        it('a project can reviewed', async () => {
+            const response = await api
+                .post('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .send(project1)
+            
+            const projectID = response.body._id;
+            expect(projectID).not.toBeNull();
+            const oldDate = new Date(response.body.lastReview).getTime();
+            expect(oldDate).toBeDefined();
+
+            const response2 = await api
+                .put(`/api/projects/${projectID}`)
+                .set('Authorization', `bearer ${token2}`)
+                .expect(200);
+            
+            const newDate = new Date(response2.body.lastReview).getTime()
+            expect(newDate).toBeGreaterThan(oldDate);
         })
     })
 })

@@ -23,4 +23,10 @@ projectRouter.post('/', middleware.userExtractor, async (request, response) => {
     response.status(201).json(savedProject);
 })
 
+projectRouter.put('/:id', middleware.userExtractor, async (request, response) => {
+    const project = await Project.findById(request.params.id);
+    const res = project.review();
+    response.status(200).json(res);
+})
+
 module.exports = projectRouter;

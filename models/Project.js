@@ -51,11 +51,12 @@ const projectSchema = new mongoose.Schema({
 })
 
 projectSchema.methods.review = function() {
-    this.lastReview = Date.now();
-    if(this.lastReview.getTime() < Date.now().getTime()) {
+    if(this.lastReview.getTime() < new Date().getTime()) {
         this.overdue = true;
     }
+    this.lastReview = Date.now();
     this.save();
+    return this;
 }
 
 projectSchema.plugin(uniqueValidator);
