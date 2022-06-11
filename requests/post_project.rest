@@ -1,0 +1,7 @@
+POST http://localhost:3001/api/projects
+Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3RlciIsImlkIjoiNjI5ODlhNTkyM2ZhZTY4OThiMGFjZDAyIiwiaWF0IjoxNjU0OTQwODExfQ.oego-sYTDXeDLvFAXIWHLzUPkcfTvp1pQGUV8LWfFOI
+
+{
+    "name": "Create website",
+}

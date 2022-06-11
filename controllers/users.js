@@ -8,7 +8,7 @@ userRouter.post('/', async (request, response) => {
     //Formatting options
     if(!body.password || body.password.length < 4) {
         return response.status(400).send({
-            error: 'Username should be at least 4 characters long.'
+            error: 'Password should be at least 4 characters long.'
         });
     } else if (!body.username || body.username.length < 3) {
         return response.status(400).send({

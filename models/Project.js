@@ -1,6 +1,15 @@
 const mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 
+function isOverdue(lastReview, overdue) {
+    let date = new Date();
+    const noOverdue = new Date(date.getTime());
+    noOverdue.setDate(date.getDate() - overdue);
+
+    return noOverdue.getTime() > lastReview.getTime();
+}
+
+
 const projectSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -8,14 +17,28 @@ const projectSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        immutable,
+        immutable: true,
         default: () => Date.now()
     },
     lastReview: {
         type: Date,
         default: () => Date.now()
     },
-    overdue: Boolean,
+    reviewFreq: {
+        type: Number
+    },
+    overdue: {
+        type: Boolean,
+        default: function() {
+            if(!this.reviewFreq) return false;
+    
+            if(isOverdue(this.lastReview, this.overdue)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    },
     tasks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Task'
@@ -35,7 +58,7 @@ projectSchema.methods.review = function() {
     this.save();
 }
 
-projectSchema.pluqin(uniqueValidator);
+projectSchema.plugin(uniqueValidator);
 
 projectSchema.set('toJSON', {
     trasnform: (document, object) => {

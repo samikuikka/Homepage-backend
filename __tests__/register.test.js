@@ -20,28 +20,31 @@ describe('adding users: ', () => {
             username: 'test',
             password: 'sekret'
         }
+        let users = await User.find({});
+
+        expect(users).toHaveLength(0);
 
         await api
             .post('/api/register')
             .send(newUser)
             .expect(200)
             .expect('Content-Type', /application\/json/);
+        
+        users = await User.find({});
+        expect(users).toHaveLength(1);
+    });
+
+    test('no password returns error', async () => {
+        const invalidUser = {
+            username: 'second'
+        }
+
+        const response = await api
+            .post('/api/register')
+            .send(invalidUser)
+            .expect(400)
+        
+        expect(response.body.error).toBe('Password should be at least 4 characters long.');
+
     })
-})
-
-
-
-/**
- * User
- */
-const userExample = {
-    username: 'tester',
-    password: '123456'
-};
-
-/**
- * Close connection at the end of test
- */
- afterAll(() => {
-   mongoose.connection.close();
 })

@@ -1,0 +1,142 @@
+const mongoose = require('mongoose');
+const supertest = require('supertest');
+const app = require('../app');
+const api = supertest(app);
+const bcrypt = require('bcrypt');
+
+const Project = require('../models/Project');
+const User = require('../models/User');
+const { map } = require('../app');
+
+/**
+ * Delete projects and user at start
+ */
+beforeAll( async () => {
+    await User.deleteMany({});
+    await Project.deleteMany({});
+});
+
+describe('project', () => {
+    let token = null;
+    
+    beforeEach( async () => {
+        await User.deleteMany({});
+
+        const passwordHash = await bcrypt.hash('sekret', 10);
+        const user = new User({ username: 'test', passwordHash});
+        await user.save();
+        const result = await api
+            .post('/api/login')
+            .send({ username: 'test', password: 'sekret'});
+        token = result.body.token;
+    })
+
+    it('let user show projects with valid token', async () => {
+        
+        const response = await api
+            .get('/api/projects')
+            .set('Authorization', `bearer ${token}`)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+        
+        console.log(response.body);
+    }, 9999)
+
+    it('normal project can be added', async () => {
+
+        const response = await api
+            .post('/api/projects')
+            .set('Authorization', `bearer ${token}`)
+            .send(project1)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        
+        expect(response.body.name).toBe('Test project');
+        expect(response.body.tasks).toHaveLength(0);
+    })
+
+    it('daily project can be added', async () => {
+        
+        const response = await api
+            .post('/api/projects')
+            .set('Authorization', `bearer ${token}`)
+            .send(dailyProject)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        
+        expect(response.body.name).toBe('Daily task');
+        expect(response.body.reviewFreq).toBe(1);
+    })
+
+    describe('with multiple projects', () => {
+        let token2 = null;
+        beforeEach( async () => {
+            await Project.deleteMany({})
+            const passwordHash = await bcrypt.hash('secret',10)
+            const testUser = new User({username: 'root', passwordHash});
+            await testUser.save();
+
+            const result = await api
+                .post('/api/login')
+                .send({username: 'root', password: 'secret'})
+            token2= result.body.token;
+
+            const blogObjects = initialProjects.map(project => new Project({...project, user: testUser._id}));
+            const promiseArray = blogObjects.map(blog => blog.save());
+            await Promise.all(promiseArray);
+        })
+
+        it('should show initial projects', async () => {
+            const response = await api
+                .get('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .expect(200)
+                .expect('Content-Type', /application\/json/);
+            
+            expect(response.body).toHaveLength(3);
+            expect(response.body.map(object => object.name)).toContain('Third');
+        },)
+
+        it('adding project with initial projects should work', async () => {
+            await api
+                .post('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .send(project1)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+
+            const response2 = await api
+                .get('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+
+            expect(response2.body).toHaveLength(4)
+            expect(response2.body.map(object => object.name)).toContain('Test project');
+        })
+    })
+})
+
+const initialProjects = [
+    {
+        name: 'Project 1'
+    },
+    {
+        name: 'Second daily project',
+        reviewFreq: 1
+    },
+    {
+        name: 'Third'
+    }
+]
+
+
+const project1 = {
+    name: 'Test project'
+}
+
+const dailyProject = {
+    name: 'Daily task',
+    reviewFreq: 1
+}
