@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt');
 
 const Project = require('../models/Project');
 const User = require('../models/User');
-const { map } = require('../app');
 
 /**
  * Delete projects and user at start
@@ -133,6 +132,24 @@ describe('project', () => {
             
             const newDate = new Date(response2.body.lastReview).getTime()
             expect(newDate).toBeGreaterThan(oldDate);
+        })
+
+        it.only('single project can be viewed', async () => {
+            const res = await api
+                .get('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .expect(200)
+            
+            const project = res.body[0]
+            const projectID = project._id;
+            expect(projectID).not.toBeNull();
+            
+            const response = await api
+                .get(`/api/projects/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+            expect(response.body).toEqual(project);
         })
     })
 })

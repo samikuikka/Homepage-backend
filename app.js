@@ -3,6 +3,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const middleware = require('./utils/middleware');
+const logger = require('./utils/logger');
 
 //Routers
 const userRouter = require('./controllers/users');
@@ -13,10 +14,10 @@ const mongoose = require('mongoose');
 
 mongoose.connect(config.MONGODB_URI)
     .then( () => {
-        console.log("Connected to database.");
+        logger.info("Connected to database.");
     })
     .catch( (e) => {
-        console.error("Error connecting to database", e.message);
+        logger.info("Error connecting to database", e.message);
     })
 
 app.use(cors())
