@@ -11,7 +11,7 @@ projectRouter.get('/', middleware.userExtractor, async (request, response) => {
 })
 
 projectRouter.get('/:id', middleware.userExtractor, async (request, response) => {
-    const project = await Project.findById(request.params.id);
+    const project = await Project.findById(request.params.id).populate('tasks');
     response.status(200).json(project);
 })
 

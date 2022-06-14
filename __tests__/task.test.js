@@ -50,7 +50,7 @@ describe('task', () => {
         await Task.deleteMany({});
     })
 
-    it.only('a task can be added', async () => {
+    it('a task can be added', async () => {
 
         const projectID = projects[0]._id;
 
@@ -71,12 +71,20 @@ describe('task', () => {
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
+        const taskID = response.body.id;
+        expect(taskID).not.toBeNull();
         expect(response.body.name).toBe('Test task')
         expect(response.body.project).toBe(projectID)
 
         /**
          * Project updated
          */
+        const response2 = await api
+            .get(`/api/projects/${projectID}`)
+            .set('Authorization', `bearer ${token}`)
+            .expect(200)
+        
+        expect(response2.body.tasks.map(project => project.id)).toContain(taskID);
         
         
     })

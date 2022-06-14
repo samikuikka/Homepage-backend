@@ -134,7 +134,7 @@ describe('project', () => {
             expect(newDate).toBeGreaterThan(oldDate);
         })
 
-        it.only('single project can be viewed', async () => {
+        it('single project can be viewed', async () => {
             const res = await api
                 .get('/api/projects')
                 .set('Authorization', `bearer ${token2}`)
