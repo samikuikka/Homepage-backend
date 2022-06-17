@@ -134,6 +134,64 @@ describe('project', () => {
             expect(newDate).toBeGreaterThan(oldDate);
         })
 
+        it('a name and reviewFreq can be updated', async () => {
+            const response = await api
+                .post('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .send(project1)
+            
+            const update = {
+                name: 'new project name',
+                reviewFreq: 10
+            }
+
+            const projectID = response.body._id;
+            const oldDate = new Date(response.body.lastReview).getTime();
+            expect(oldDate).toBeDefined();
+
+            const response2 = await api
+                .put(`/api/projects/${projectID}`)
+                .set('Authorization', `bearer ${token2}`)
+                .send(update)
+                .expect(200)
+                .expect('Content-Type', /application\/json/);
+            
+            const newDate = new Date(response2.body.lastReview).getTime()
+            expect(newDate).toBeGreaterThan(oldDate);
+            expect(response2.body.name).toBe('new project name');
+            expect(response2.body.reviewFreq).toBe(10);
+
+        })
+
+        it('only name and reviewFreq can be updated', async () => {
+            const response = await api
+                .post('/api/projects')
+                .set('Authorization', `bearer ${token2}`)
+                .send(project1)
+            
+            const update = {
+                reviewFreq: 10,
+                createdAt: Date.now()
+            }
+
+            const projectID = response.body._id;
+            const oldDate = new Date(response.body.lastReview).getTime();
+            expect(oldDate).toBeDefined();
+
+            const response2 = await api
+                .put(`/api/projects/${projectID}`)
+                .set('Authorization', `bearer ${token2}`)
+                .send(update)
+                .expect(200)
+                .expect('Content-Type', /application\/json/);
+            
+            const newDate = new Date(response2.body.lastReview).getTime()
+            expect(newDate).toBeGreaterThan(oldDate);
+            expect(response2.body.name).toBe('Test project');
+            expect(response2.body.reviewFreq).toBe(10);
+            expect(response2.body.createdAt).toBe(response.body.createdAt);
+        })
+
         it('single project can be viewed', async () => {
             const res = await api
                 .get('/api/projects')

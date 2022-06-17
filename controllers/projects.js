@@ -34,6 +34,7 @@ projectRouter.post('/', middleware.userExtractor, async (request, response) => {
 //New task
 projectRouter.post('/:id/tasks', middleware.userExtractor, async (request, response) => {
     const body = request.body;
+    await Project.findByIdAndUpdate
     const project = await Project.findById(request.params.id);
     const task = new Task({
         name: body.name,
@@ -52,8 +53,15 @@ projectRouter.post('/:id/tasks', middleware.userExtractor, async (request, respo
 
 // Review project
 projectRouter.put('/:id', middleware.userExtractor, async (request, response) => {
-    const project = await Project.findById(request.params.id);
+    const body = request.body;
+    const update = {
+        name: body.name,
+        reviewFreq: body.reviewFreq
+    }
+
+    const project = await Project.findByIdAndUpdate(request.params.id, update, { new: true});
     const res = project.review();
+
     response.status(200).json(res);
 })
 
