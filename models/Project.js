@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 
 function isOverdue(lastReview, overdue) {
+    if(!overdue) return false;
+
     let date = new Date();
     const noOverdue = new Date(date.getTime());
     noOverdue.setDate(date.getDate() - overdue);
@@ -32,7 +34,7 @@ const projectSchema = new mongoose.Schema({
         default: function() {
             if(!this.reviewFreq) return false;
     
-            if(isOverdue(this.lastReview, this.overdue)) {
+            if(isOverdue(this.lastReview, this.reviewFreq)) {
                 return true;
             } else {
                 return false;
@@ -51,10 +53,8 @@ const projectSchema = new mongoose.Schema({
 })
 
 projectSchema.methods.review = function() {
-    if(this.lastReview.getTime() < new Date().getTime()) {
-        this.overdue = true;
-    }
     this.lastReview = Date.now();
+    this.overdue = false;
     this.save();
     return this;
 }
