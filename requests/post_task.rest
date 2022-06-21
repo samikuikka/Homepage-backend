@@ -1,0 +1,9 @@
+POST http://localhost:3001/api/projects/62ab01d5c86f39ad792cfb8a/tasks
+Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3RlciIsImlkIjoiNjI5ODlhNTkyM2ZhZTY4OThiMGFjZDAyIiwiaWF0IjoxNjU1NzA3Njc0fQ.YD7EIy05idbTrT8hq0PYbwsJmLaS7bMwMFB_mQQLcG4
+
+{
+    "name": "task 3",
+    "hiPriority": false,
+    "duration": 30
+}

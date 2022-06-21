@@ -9,6 +9,7 @@ const logger = require('./utils/logger');
 const userRouter = require('./controllers/users');
 const loginRouter = require('./controllers/login');
 const projectRouter = require('./controllers/projects');
+const tasksRouter = require('./controllers/tasks');
 
 const mongoose = require('mongoose');
 
@@ -30,5 +31,6 @@ app.use(middleware.tokenExtractor);
 app.use('/api/register', userRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/projects', projectRouter);
+app.use('/api/tasks', tasksRouter);
 
 module.exports = app;

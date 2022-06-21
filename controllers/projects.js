@@ -3,6 +3,7 @@ const Project = require('../models/Project');
 const Task = require('../models/Task');
 const middleware = require('../utils/middleware');
 
+
 //Get projects of user
 projectRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user;
@@ -14,6 +15,7 @@ projectRouter.get('/:id', middleware.userExtractor, async (request, response) =>
     const project = await Project.findById(request.params.id).populate('tasks');
     response.status(200).json(project);
 })
+
 
 //New project
 projectRouter.post('/', middleware.userExtractor, async (request, response) => {
@@ -34,7 +36,6 @@ projectRouter.post('/', middleware.userExtractor, async (request, response) => {
 //New task
 projectRouter.post('/:id/tasks', middleware.userExtractor, async (request, response) => {
     const body = request.body;
-    await Project.findByIdAndUpdate
     const project = await Project.findById(request.params.id);
     const task = new Task({
         name: body.name,
