@@ -43,83 +43,159 @@ describe('task', () => {
             .set('Authorization', `bearer ${token}`);
         projects = response.body;
     })
-
-    it('without tasks shows empty list', async () => {
-        const response = await api
-            .get('/api/tasks')
-            .set('Authorization', `bearer ${token}`)
-            .expect(200)
-            .expect('Content-Type', /application\/json/)
-        
-        expect(response.body).toEqual([]);
+    describe('get', () => {
+        it('without tasks shows empty list', async () => {
+            const response = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
+            
+            expect(response.body).toEqual([]);
+        })
     })
 
-    it('can be posted', async () => {
-        const projectID = projects[0]._id;
-        const task = exampleTask;
-        task.project = projectID;
-
-        const response = await api
-            .post(`/api/tasks/${projectID}`)
-            .set('Authorization', `bearer ${token}`)
-            .send(task)
-            .expect(201)
-            .expect('Content-Type', /application\/json/)
-        
-        const taskID = response.body.id;
-        expect(response.body.name).toBe('Example task');
-        expect(response.body.hiPriority).toBe(false);
-
-        const res2 = await api
-            .get('/api/tasks')
-            .set('Authorization', `bearer ${token}`)
-            .expect(200)
-
-        expect(res2.body.map(task => task.id)).toContain(taskID);
+    describe('post', () => {
+        it('can be posted', async () => {
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+    
+            const response = await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+            
+            const taskID = response.body.id;
+            expect(response.body.name).toBe('Example task');
+            expect(response.body.hiPriority).toBe(false);
+    
+            const res2 = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+    
+            expect(res2.body.map(task => task.id)).toContain(taskID);
+        })
+    
+        it('multiple tasks can be posted', async () => {
+            const projectID= projects[0]._id;
+            let task1 = exampleTask;
+            task1.project = projectID;
+    
+            let task2 = {
+                name: 'second task',
+                dueDate: Date.now(),
+                duration: 30,
+                project: projectID
+            }
+    
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task1)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+            
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task2)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+    
+            const res = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+            
+            const res2 = await api
+                .get(`/api/projects/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+            
+            
+            expect(res.body).toHaveLength(2);
+            expect(res.body.map(task => task.name)).toContain('second task')
+            expect(res.body.map(task => task.name)).toContain('Example task')
+            expect(res2.body.tasks).toHaveLength(2);
+    
+        })
     })
 
-    it('multiple tasks can be posted', async () => {
-        const projectID= projects[0]._id;
-        let task1 = exampleTask;
-        task1.project = projectID;
 
-        let task2 = {
-            name: 'second task',
-            dueDate: Date.now(),
-            duration: 30,
-            project: projectID
-        }
+    describe('delete', () => {
+        it('can delete task', async () => {
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+    
+            const res = await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task)
+                .expect(201)
+            
+            const taskID = res.body.id;
+    
+            const res2 = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`);
+    
+            expect(res2.body.map(task => task.id)).toContain(taskID);
+    
+            await api
+                .delete(`/api/tasks/${taskID}`)
+                .set('Authorization', `bearer ${token}`)
+                .expect(204)
+            
+            const res3 = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`);
+            
+            expect(res3.body.map(task => task.id)).not.toContain(taskID);
+        });
 
-        await api
-            .post(`/api/tasks/${projectID}`)
-            .set('Authorization', `bearer ${token}`)
-            .send(task1)
-            .expect(201)
-            .expect('Content-Type', /application\/json/)
-        
-        await api
-            .post(`/api/tasks/${projectID}`)
-            .set('Authorization', `bearer ${token}`)
-            .send(task2)
-            .expect(201)
-            .expect('Content-Type', /application\/json/)
+        describe('put', () => {
 
-        const res = await api
-            .get('/api/tasks')
-            .set('Authorization', `bearer ${token}`)
-            .expect(200)
+            it('can update task', async () => {
+                const projectID = projects[0]._id;
+                const task = exampleTask;
+                task.project = projectID;
         
-        const res2 = await api
-            .get(`/api/projects/${projectID}`)
-            .set('Authorization', `bearer ${token}`)
-            .expect(200)
-        
-        
-        expect(res.body).toHaveLength(2);
-        expect(res.body.map(task => task.name)).toContain('second task')
-        expect(res.body.map(task => task.name)).toContain('Example task')
-        expect(res2.body.tasks).toHaveLength(2);
+                const res = await api
+                    .post(`/api/tasks/${projectID}`)
+                    .set('Authorization', `bearer ${token}`)
+                    .send(task)
+                    .expect(201)
+                
+                const taskID = res.body.id;
+                
+                const updated = {
+                    name: 'updated task',
+                    duration: 5,
+                    hiPriority: true,
+                    done: true
+                }
 
+                await api
+                    .put(`/api/tasks/${taskID}`)
+                    .set('Authorization', `bearer ${token}`)
+                    .send(updated)
+                    .expect(200)
+                    .expect('Content-Type', /application\/json/)
+                
+                const res2 = await api
+                    .get('/api/tasks')
+                    .set('Authorization', `bearer ${token}`)
+                
+                expect(res2.body.map(task => task.name)).toContain('updated task')
+
+                
+            })
+        })
     })
 
 

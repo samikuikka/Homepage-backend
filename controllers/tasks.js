@@ -28,4 +28,34 @@ tasksRouter.post('/:id', middleware.userExtractor, async (request, response) => 
     response.status(201).json(savedTask);
 });
 
+tasksRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+    const user = request.user;
+    const task = await Task.findById(request.params.id);
+    const project = await Project.findById(task.project);
+
+    if(project.user.toString() === user._id.toString() ) {
+        project.tasks = project.tasks.filter(id => id !== task._id);
+        project.save();
+        await Task.findByIdAndRemove(request.params.id);
+        return response.status(204).end();
+    } else {
+        return response.status(400).json({ error: 'wrong user token'});
+    }
+});
+
+tasksRouter.put('/:id', middleware.userExtractor, async (request, response) => {
+    const body = request.body;
+
+    const update = {
+        name: body.name,
+        done: body.done,
+        hiPriority: body.hiPriority,
+        duration: body.duration
+    };
+
+    const task = await Task.findByIdAndUpdate(request.params.id, update, { new: true });
+
+    response.status(200).json(task);
+})
+
 module.exports = tasksRouter;
