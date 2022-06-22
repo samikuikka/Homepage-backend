@@ -192,7 +192,6 @@ describe('task', () => {
                     .set('Authorization', `bearer ${token}`)
                 
                 expect(res2.body.map(task => task.name)).toContain('updated task')
-
                 
             })
         })
