@@ -53,6 +53,63 @@ describe('task', () => {
             
             expect(response.body).toEqual([]);
         })
+
+        it('shows right project for task', async () => {
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+            
+            const response = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+            expect(projects.map(project => project.name)).toContain(response.body[0].project.name);
+        })
+
+        it('shows only own tasks', async () => {
+            //Add user
+            const passwordHash = await bcrypt.hash('sekret', 10);
+            const user = new User({ username: 'test', passwordHash });
+            await user.save();
+            const result = await api
+                .post('/api/login')
+                .send({ username: 'test', password: 'sekret' });
+            const token2 = result.body.token;
+
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            const res = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token2}`)
+                .expect(200)
+
+            expect(res.body).toEqual([]);
+
+            const res2 = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200);
+          
+            expect(res2.body.map(task => task.name)).toEqual(['Example task']);
+        })
+
+
     })
 
     describe('post', () => {
@@ -76,6 +133,7 @@ describe('task', () => {
                 .get('/api/tasks')
                 .set('Authorization', `bearer ${token}`)
                 .expect(200)
+            
     
             expect(res2.body.map(task => task.id)).toContain(taskID);
         })

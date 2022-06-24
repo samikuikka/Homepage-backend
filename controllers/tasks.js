@@ -5,9 +5,13 @@ const middleware = require('../utils/middleware');
 
 tasksRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user;
-    const projects = await Project.find({ user: user._id}).select('tasks -_id').populate('tasks');
-    const flatten = projects.map(project => project.tasks).flat();
-    response.status(200).json(flatten);
+    const projects = await Project.find({ user: user._id}).select('_id')
+    const tasks = await Task.find({project: { $in: projects}}).populate({
+        path: 'project',
+        select: 'name -_id'
+    });
+    
+    response.status(200).json(tasks);
 });
 
 tasksRouter.post('/:id', middleware.userExtractor, async (request, response) => {
