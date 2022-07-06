@@ -23,7 +23,8 @@ tasksRouter.post('/:id', middleware.userExtractor, async (request, response) => 
         dueDate: body.dueDate,
         context: body.context,
         project: project._id,
-        duration: body.duration
+        duration: body.duration,
+        hiPriority: body.hiPriority
     });
 
     const savedTask = await task.save();

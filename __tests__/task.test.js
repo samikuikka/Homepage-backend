@@ -117,7 +117,8 @@ describe('task', () => {
             const projectID = projects[0]._id;
             const task = exampleTask;
             task.project = projectID;
-    
+            task.hiPriority = true;
+            
             const response = await api
                 .post(`/api/tasks/${projectID}`)
                 .set('Authorization', `bearer ${token}`)
@@ -127,15 +128,16 @@ describe('task', () => {
             
             const taskID = response.body.id;
             expect(response.body.name).toBe('Example task');
-            expect(response.body.hiPriority).toBe(false);
+            expect(response.body.hiPriority).toEqual(true);
     
             const res2 = await api
                 .get('/api/tasks')
                 .set('Authorization', `bearer ${token}`)
                 .expect(200)
             
-    
+            
             expect(res2.body.map(task => task.id)).toContain(taskID);
+            expect(res2.body.map(task => task.hiPriority)).toContain(true)
         })
     
         it('multiple tasks can be posted', async () => {
