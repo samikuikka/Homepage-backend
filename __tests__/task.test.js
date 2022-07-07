@@ -109,6 +109,112 @@ describe('task', () => {
             expect(res2.body.map(task => task.name)).toEqual(['Example task']);
         })
 
+        it('can filter todays tasks', async () => {
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task);
+            
+            //Dates
+            const today = new Date();
+            const tomorrow = new Date();
+            const yesterday = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            yesterday.setDate(today.getDate() -1);
+
+            const task2 = {
+                name: "tomorrow's task",
+                project: projectID,
+                dueDate: tomorrow
+            }
+            const task3 = {
+                name: "yesterday's task",
+                project: projectID,
+                dueDate: yesterday
+            }
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task2)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task3)
+                .expect(201)
+                .expect('Content-Type', /application\/json/)
+            
+            const response = await api
+                .get('/api/tasks/today')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200)
+                .expect('Content-Type', /application\/json/);
+            
+            expect(response.body.map(task => task.name)).toContain('Example task');
+            expect(response.body.map(task => task.name)).not.toContain("tomorrow's task");
+            expect(response.body.map(task => task.name)).not.toContain("yesterday's task");
+            expect(response.body).toHaveLength(1);
+        });
+
+        it('can filter this weeks tasks', async () => {
+            const projectID = projects[0]._id;
+            const task = exampleTask;
+            task.project = projectID;
+
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task);
+            
+            const today = new Date();
+            let lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 7);
+            let nextWeek = new Date();
+            nextWeek.setDate(today.getDate() + 7);
+
+            const task2 = {
+                name: 'next week',
+                project: projectID,
+                dueDate: nextWeek
+            };
+            const task3 = {
+                name: 'last week',
+                project: projectID,
+                dueDate: lastWeek
+            }
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task2);
+            await api
+                .post(`/api/tasks/${projectID}`)
+                .set('Authorization', `bearer ${token}`)
+                .send(task3);
+
+            //Check that tasks are in the whole task list
+            const response = await api
+                .get('/api/tasks')
+                .set('Authorization', `bearer ${token}`)
+            expect(response.body.map(task => task.name)).toEqual(expect.arrayContaining(['next week', 'last week', 'Example task']));
+
+            const response2 = await api
+                .get('/api/tasks/week')
+                .set('Authorization', `bearer ${token}`)
+                .expect(200);
+            
+            expect(response2.body.map(task => task.name)).not.toContain('next week')
+            expect(response2.body.map(task => task.name)).not.toContain('last week')
+            expect(response2.body).toHaveLength(1);
+
+        })
+
 
     })
 
