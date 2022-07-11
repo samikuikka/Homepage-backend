@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 
 const Project = require('../models/Project');
 const User = require('../models/User');
+const Task = require('../models/Task');
 
 /**
  * Delete Users and projects
@@ -81,6 +82,106 @@ describe('project', () => {
             .expect(400)
         
         expect(response2.body).toEqual({error: 'wrong user token'});
+    })
+
+    it('project deletion also deletes tasks of the project', async () => {
+        const response = await api
+            .post('/api/projects')
+            .set('Authorization', `bearer ${token1}`)
+            .send(exampleProject)
+            .expect(201)
+
+        const projectID = response.body._id;
+        
+        const task1 = {
+            name: 'task 1',
+            project: projectID
+        };
+        const task2 = {
+            name: 'task 2',
+            project: projectID
+        };
+        //Send tasks for project
+        await api
+            .post(`/api/tasks/${projectID}`)
+            .set('Authorization', `bearer ${token1}`)
+            .send(task1)
+            .expect(201);
+        
+        await api
+            .post(`/api/tasks/${projectID}`)
+            .set('Authorization', `bearer ${token1}`)
+            .send(task2)
+            .expect(201);
+        
+        //Check that currently tasks can be found
+        let tasks = await Task.find({project: projectID})
+        expect(tasks).toHaveLength(2);
+        expect(tasks.map(task => task.name)).toEqual(expect.arrayContaining(['task 1', 'task 2']));
+
+        await api
+            .delete(`/api/projects/${projectID}`)
+            .set('Authorization', `bearer ${token1}`)
+            .expect(204);
+        
+        tasks = await Task.find({project: projectID})
+        expect(tasks).toHaveLength(0);
+        expect(tasks.map(task => task.name)).not.toEqual(expect.arrayContaining(['task 1', 'task 2']));
+
+    })
+
+    it('only delets tasks of the deleted project', async () => {
+        const response = await api
+            .post('/api/projects')
+            .set('Authorization', `bearer ${token1}`)
+            .send(exampleProject)
+            .expect(201)
+
+        const projectID1 = response.body._id;
+
+        const secondProject = {
+            name: 'second'
+        };
+        const res2 = await api
+            .post('/api/projects')
+            .set('Authorization', `bearer ${token1}`)
+            .send(secondProject)
+            .expect(201)
+
+        const projectID2 = res2.body._id;
+        
+        const task1 = {
+            name: 'task 1',
+            project: projectID1
+        };
+        const task2 = {
+            name: 'task 2',
+            project: projectID2
+        };
+
+         //Send tasks for project
+         await api
+         .post(`/api/tasks/${projectID1}`)
+         .set('Authorization', `bearer ${token1}`)
+         .send(task1)
+         .expect(201);
+     
+        await api
+            .post(`/api/tasks/${projectID2}`)
+            .set('Authorization', `bearer ${token1}`)
+            .send(task2)
+            .expect(201);
+
+        await api
+            .delete(`/api/projects/${projectID1}`)
+            .set('Authorization', `bearer ${token1}`)
+            .expect(204);
+        
+        const tasks1 = await Task.find({project: projectID1});
+        expect(tasks1).toHaveLength(0);
+        const tasks2 = await Task.find({project: projectID2});
+        expect(tasks2).toHaveLength(1);
+
     })
 })
 

@@ -56,8 +56,10 @@ projectRouter.post('/:id/tasks', middleware.userExtractor, async (request, respo
 projectRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
     const user = request.user;
     const project = await Project.findById(request.params.id);
+
     if(project.user.toString() === user._id.toString()) {
         await Project.findByIdAndRemove(request.params.id);
+        await Task.deleteMany({project: request.params.id})
         return response.status(204).end();
     } else {
         return response.status(400).json({ error: 'wrong user token'});
