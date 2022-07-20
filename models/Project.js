@@ -15,7 +15,8 @@ function isOverdue(lastReview, overdue) {
 const projectSchema = new mongoose.Schema({
     name: {
         type: String,
-        unique: true
+        unique: true,
+        required: true
     },
     createdAt: {
         type: Date,

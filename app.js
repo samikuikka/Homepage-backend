@@ -10,6 +10,7 @@ const userRouter = require('./controllers/users');
 const loginRouter = require('./controllers/login');
 const projectRouter = require('./controllers/projects');
 const tasksRouter = require('./controllers/tasks');
+const contextRouter = require('./controllers/contexts');
 
 const mongoose = require('mongoose');
 
@@ -32,5 +33,6 @@ app.use('/api/register', userRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/projects', projectRouter);
 app.use('/api/tasks', tasksRouter);
+app.use('/api/contexts', contextRouter);
 
 module.exports = app;
